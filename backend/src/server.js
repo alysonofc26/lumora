@@ -269,11 +269,13 @@ app.get('/api/search/all', (req, res) => {
   
   const like = '%'+q+'%';
   const lim = parseInt(limit);
+  const all = db.prepare("SELECT * FROM items").all();
+  const ql = q.toLowerCase();
   
-  const movies = db.prepare("SELECT id, title, thumbnail, year, rating, 'movie' as type FROM movies WHERE title LIKE ? OR genre LIKE ? ORDER BY rating DESC LIMIT ?").all(like, like, lim);
-  const series = db.prepare("SELECT id, title, thumbnail, year, rating, 'series' as type FROM series WHERE title LIKE ? OR genre LIKE ? ORDER BY rating DESC LIMIT ?").all(like, like, lim);
-  const animes = db.prepare("SELECT id, title, thumbnail, year, rating, 'anime' as type FROM animes WHERE title LIKE ? OR genre LIKE ? ORDER BY rating DESC LIMIT ?").all(like, like, lim);
-  const iptv = db.prepare("SELECT id, name as title, logo as thumbnail, group_name, 'iptv' as type FROM iptv_channels WHERE name LIKE ? AND active=1 ORDER BY name LIMIT ?").all(like, lim);
+  const movies = all.filter(i => i.type === 'movie' && i.title.toLowerCase().includes(ql)).slice(0, lim);
+  const series = all.filter(i => i.type === 'series' && i.title.toLowerCase().includes(ql)).slice(0, lim);
+  const animes = all.filter(i => i.type === 'anime' && i.title.toLowerCase().includes(ql)).slice(0, lim);
+  const iptv = all.filter(i => i.type === 'channel' && i.title.toLowerCase().includes(ql)).slice(0, lim);
   
   return res.json({ movies, series, animes, iptv });
 });
@@ -281,6 +283,14 @@ app.get('/api/search/all', (req, res) => {
 // === ANIME ENDPOINTS ===
 
 app.get('/api/animes', (req, res) => {
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='animes'").get()) {
+    const { search, limit = 50, page = 1 } = req.query;
+    let list = db.prepare("SELECT * FROM items WHERE type='anime'").all();
+    if (search) { const q = search.toLowerCase(); list = list.filter(i => i.title.toLowerCase().includes(q)); }
+    list.sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    return res.json({ animes: list.slice(offset, offset + parseInt(limit)), total: list.length, page: parseInt(page), limit: parseInt(limit) });
+  }
   const { genre, search, limit = 50, page = 1 } = req.query;
   let sql = 'SELECT * FROM animes WHERE 1=1';
   const params = [];
@@ -295,15 +305,25 @@ app.get('/api/animes', (req, res) => {
 });
 
 app.get('/api/animes/:id', (req, res) => {
-  const anime = db.prepare('SELECT * FROM animes WHERE id = ?').get(req.params.id);
+  const anime = db.prepare('SELECT * FROM animes WHERE id = ?').get(req.params.id) ||
+                db.prepare("SELECT * FROM items WHERE id = ? AND type='anime'").get(req.params.id);
   if (!anime) return res.status(404).json({ error: 'Not found' });
-  const episodes = db.prepare('SELECT * FROM episodes WHERE anime_id = ? ORDER BY episode_number').all(anime.id);
+  let episodes = [];
+  try { episodes = db.prepare('SELECT * FROM episodes WHERE anime_id = ? ORDER BY episode_number').all(anime.id); } catch {}
   res.json({ ...anime, episodes });
 });
 
 // === MOVIE ENDPOINTS ===
 
 app.get('/api/movies', (req, res) => {
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='movies'").get()) {
+    const { search, limit = 50, page = 1 } = req.query;
+    let list = db.prepare("SELECT * FROM items WHERE type='movie'").all();
+    if (search) { const q = search.toLowerCase(); list = list.filter(i => i.title.toLowerCase().includes(q)); }
+    list.sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    return res.json({ movies: list.slice(offset, offset + parseInt(limit)), total: list.length, page: parseInt(page), limit: parseInt(limit) });
+  }
   const { genre, search, limit = 50, page = 1 } = req.query;
   let sql = 'SELECT * FROM movies WHERE 1=1';
   const params = [];
@@ -318,7 +338,8 @@ app.get('/api/movies', (req, res) => {
 });
 
 app.get('/api/movies/:id', (req, res) => {
-  const movie = db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id);
+  const movie = db.prepare('SELECT * FROM movies WHERE id = ?').get(req.params.id) ||
+                db.prepare("SELECT * FROM items WHERE id = ? AND type='movie'").get(req.params.id);
   if (!movie) return res.status(404).json({ error: 'Not found' });
   res.json(movie);
 });
@@ -326,6 +347,14 @@ app.get('/api/movies/:id', (req, res) => {
 // === SERIES ENDPOINTS ===
 
 app.get('/api/series', (req, res) => {
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='series'").get()) {
+    const { search, limit = 50, page = 1 } = req.query;
+    let list = db.prepare("SELECT * FROM items WHERE type='series'").all();
+    if (search) { const q = search.toLowerCase(); list = list.filter(i => i.title.toLowerCase().includes(q)); }
+    list.sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    return res.json({ series: list.slice(offset, offset + parseInt(limit)), total: list.length, page: parseInt(page), limit: parseInt(limit) });
+  }
   const { genre, search, limit = 50, page = 1 } = req.query;
   let sql = 'SELECT * FROM series WHERE 1=1';
   const params = [];
@@ -340,20 +369,41 @@ app.get('/api/series', (req, res) => {
 });
 
 app.get('/api/series/:id', (req, res) => {
-  const serie = db.prepare('SELECT * FROM series WHERE id = ?').get(req.params.id);
+  const serie = db.prepare('SELECT * FROM series WHERE id = ?').get(req.params.id) ||
+                db.prepare("SELECT * FROM items WHERE id = ? AND type='series'").get(req.params.id);
   if (!serie) return res.status(404).json({ error: 'Not found' });
-  const episodes = db.prepare('SELECT * FROM series_episodes WHERE series_id = ? ORDER BY season, episode_number').all(serie.id);
+  let episodes = [];
+  try { episodes = db.prepare('SELECT * FROM series_episodes WHERE series_id = ? ORDER BY season, episode_number').all(serie.id); } catch {}
   res.json({ ...serie, episodes });
 });
 
 // === IPTV CHANNELS ENDPOINTS ===
 
+const hasIPTVTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='iptv_channels'").get();
+
 app.get('/api/iptv/groups', (req, res) => {
+  if (!hasIPTVTable) {
+    const channels = db.prepare("SELECT * FROM items WHERE type='channel'").all();
+    const tags = {};
+    channels.forEach(c => { const t = c.tags || 'Geral'; tags[t] = (tags[t] || 0) + 1; });
+    return res.json(Object.entries(tags).map(([group_name, count]) => ({ group_name, count })));
+  }
   const groups = db.prepare('SELECT group_name, COUNT(*) as count FROM iptv_channels WHERE active=1 GROUP BY group_name ORDER BY count DESC').all();
   res.json(groups);
 });
 
 app.get('/api/iptv/channels', (req, res) => {
+  if (!hasIPTVTable) {
+    const { search, limit = 100, page = 1 } = req.query;
+    let channels = db.prepare("SELECT *, title as name, thumbnail as logo, tags as group_name FROM items WHERE type='channel'").all();
+    if (search) {
+      const q = search.toLowerCase();
+      channels = channels.filter(c => c.name.toLowerCase().includes(q));
+    }
+    channels.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    return res.json({ channels: channels.slice(offset, offset + parseInt(limit)), total: channels.length, page: parseInt(page), limit: parseInt(limit) });
+  }
   const { group, search, limit = 100, page = 1 } = req.query;
   let sql = 'SELECT * FROM iptv_channels WHERE active=1';
   const params = [];
@@ -368,6 +418,11 @@ app.get('/api/iptv/channels', (req, res) => {
 });
 
 app.get('/api/iptv/channels/:id', (req, res) => {
+  if (!hasIPTVTable) {
+    const ch = db.prepare("SELECT *, title as name, thumbnail as logo FROM items WHERE id = ? AND type='channel'").get(req.params.id);
+    if (!ch) return res.status(404).json({ error: 'Not found' });
+    return res.json(ch);
+  }
   const channel = db.prepare('SELECT * FROM iptv_channels WHERE id = ?').get(req.params.id);
   if (!channel) return res.status(404).json({ error: 'Not found' });
   res.json(channel);
@@ -376,6 +431,9 @@ app.get('/api/iptv/channels/:id', (req, res) => {
 // === IPTV CATEGORIES ENDPOINTS ===
 
 app.get('/api/iptv/categories', (req, res) => {
+  if (!hasIPTVTable) {
+    return res.json([]);
+  }
   const categories = db.prepare(`
     SELECT c.id, c.name, c.slug, c.icon, c.parent_id, c.sort_order,
            COUNT(ch.id) as channel_count
