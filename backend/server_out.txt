@@ -1,0 +1,28 @@
+Lumora API on http://localhost:3001
+TMDB: Syncing 21 items from items...
+  OK: SBT -> 0
+  OK: Record TV -> 6.4
+  OK: Band -> 8.591
+  OK: ESPN -> 9
+  OK: ESPN2 -> 0
+  OK: SporTV -> 0
+  OK: Fox Sports -> 0
+  OK: CNN Brasil -> 0
+  OK: GloboNews -> 0
+  OK: Jovem Pan -> 5.5
+  OK: Discovery -> 6.957
+  OK: History -> 6.775
+  OK: Animal Planet -> 10
+  OK: Disney Channel -> 9
+  OK: Cartoon Network -> 0
+  OK: Nickelodeon -> 7.174
+TMDB: items done! 16/21
+TMDB: Syncing 10 items from movies...
+TMDB: movies done! 0/10
+TMDB: Syncing 97 items from series...
+TMDB: series done! 0/97
+TMDB: Syncing 21 items from animes...
+  OK: Aki Sora -> 8
+  OK: Asa made Jugyou Chu! -> 0
+TMDB: animes done! 2/21
+TMDB: ALL DONE! 18/149 synced

@@ -1,0 +1,20 @@
+.iptv-page{padding:20px}
+
+.channel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.iptv-card{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#16213e;border-radius:10px;border:1px solid #2a2a4a;cursor:pointer;transition:all .2s}
+.iptv-card:hover{background:#1f3460;border-color:#e94560;transform:translateY(-2px)}
+.iptv-card-logo{width:44px;height:44px;border-radius:8px;object-fit:contain;background:#0f3460;flex-shrink:0}
+.iptv-card-placeholder{width:44px;height:44px;border-radius:8px;background:#0f3460;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.iptv-card-info{flex:1;min-width:0}
+.iptv-card-name{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iptv-card-group{display:block;font-size:11px;color:#888;margin-top:2px}
+.iptv-card-play{width:36px;height:36px;border-radius:50%;background:#e94560;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0;opacity:0;transition:opacity .2s}
+.iptv-card:hover .iptv-card-play{opacity:1}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px}
+.pagination button{padding:10px 20px;border:1px solid #333;border-radius:8px;background:#16213e;color:#fff;cursor:pointer;font-size:14px}
+.pagination button:disabled{opacity:.4;cursor:not-allowed}
+.pagination button:hover:not(:disabled){background:#e94560;border-color:#e94560}
+.pagination span{color:#888;font-size:14px}
+
+@media(max-width:768px){.channel-grid{grid-template-columns:1fr}}

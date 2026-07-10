@@ -1,0 +1,6 @@
+Lumora API on http://localhost:3001
+TMDB: Syncing 3 items...
+  MISS: FMA: Brotherhood
+  MISS: De Volta p/ Futuro
+  MISS: O Rei Leão (Filme)
+TMDB: Done! 0/3 synced

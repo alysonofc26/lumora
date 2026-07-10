@@ -1,0 +1,28 @@
+.home{max-width:1400px;margin:0 auto}.hero{background:linear-gradient(135deg,var(--bg-secondary),var(--bg-card));border-radius:20px;padding:48px;margin-bottom:32px;border:1px solid var(--border)}.hero-content h1{font-size:2.5rem;margin-bottom:12px}.hero-content .highlight{background:linear-gradient(135deg,var(--accent),#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.hero-content p{color:var(--text-secondary);font-size:1.1rem;margin-bottom:24px}.hero-stats{display:flex;gap:16px;flex-wrap:wrap}.stat-card{background:var(--bg-primary);padding:16px 24px;border-radius:12px;text-align:center;border:1px solid var(--border);min-width:120px}.stat-number{display:block;font-size:1.8rem;font-weight:700;color:var(--accent)}.stat-label{font-size:.8rem;color:var(--text-secondary);text-transform:uppercase}.section{margin-bottom:36px}.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.section-header h2{font-size:1.3rem}.see-all{color:var(--accent);font-size:.9rem}.card-grid{display:grid;gap:16px}.channels-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.featured-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}.channel-card{display:flex;align-items:center;gap:12px;padding:16px;background:var(--bg-card);border-radius:12px;border:1px solid var(--border);transition:all .2s}.channel-card:hover{background:var(--bg-hover);transform:translateY(-2px)}.channel-icon{width:48px;height:48px;background:var(--bg-primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}.channel-info h4{font-size:.95rem;margin-bottom:4px}.live-badge{font-size:.7rem;background:var(--accent);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600}.featured-card{background:var(--bg-card);border-radius:14px;overflow:hidden;border:1px solid var(--border);transition:all .3s}.featured-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(233,69,96,.15);border-color:var(--accent)}.featured-poster{height:140px;background:linear-gradient(135deg,var(--bg-hover),var(--bg-primary));display:flex;align-items:center;justify-content:center;position:relative}.poster-emoji{font-size:2.5rem}.featured-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}.featured-card:hover .featured-overlay{opacity:1}.play-btn{width:44px;height:44px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem}.featured-info{padding:14px}.featured-info h4{font-size:.9rem;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.featured-info p{font-size:.75rem;color:var(--text-secondary)}
+
+/* BIGGER CARDS - Home sections */
+.movie-home-grid, .series-home-grid, .anime-home-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 24px !important;
+}
+.movie-home-card, .series-home-card, .anime-home-card {
+  border-radius: 14px !important;
+}
+.movie-home-thumb, .series-home-thumb, .anime-home-thumb {
+  aspect-ratio: 2/3 !important;
+}
+.movie-home-info h4, .series-home-info h4, .anime-home-info h4 {
+  font-size: 15px !important;
+}
+.movie-home-info p, .series-home-info p, .anime-home-info p {
+  font-size: 12px !important;
+}
+.rating-badge {
+  top: 8px !important;
+  right: 8px !important;
+  padding: 4px 10px !important;
+  font-size: 13px !important;
+}
+.thumb-placeholder {
+  font-size: 64px !important;
+}
