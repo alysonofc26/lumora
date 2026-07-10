@@ -1,0 +1,13 @@
+{
+  "name": "lumora",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "install-backend": "cd backend && npm install"
+  },
+  "dependencies": {}
+}
