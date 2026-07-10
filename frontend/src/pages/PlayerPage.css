@@ -1,5 +1,6 @@
 .nf-player{position:fixed;inset:0;z-index:9999;background:#000}
 .nf-video{width:100%;height:100%;object-fit:contain;background:#000}
+.nf-iframe{width:100%;height:100%;border:none;background:#000}
 
 /* Back button - minimal, top-left, fades out */
 .nf-back{position:absolute;top:16px;left:16px;z-index:10;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}

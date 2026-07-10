@@ -6,6 +6,7 @@ import db from './database.js';
 import { v4 as uuidv4 } from 'uuid';
 import { searchMovie, searchTV, getMovieDetails, getTVDetails, enrichItem, getImageUrl } from './tmdb.js';
 import { importM3UIfEmpty } from './importM3U.js';
+import { importScrapedIfEmpty } from './importScraped.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -220,8 +221,47 @@ app.get('/api/items/:id', (req, res) => {
     db.prepare('UPDATE items SET views = views + 1 WHERE id = ?').run(req.params.id);
     return res.json(item);
   }
+  // Check IPTV channels
   const ch = db.prepare('SELECT *, name as title, logo as thumbnail, stream_url, group_name as tags, \'iptv\' as type FROM iptv_channels WHERE id = ?').get(req.params.id);
   if (ch) return res.json(ch);
+  // Check scraped tables (movies, series, animes)
+  const id = parseInt(req.params.id);
+  if (!isNaN(id)) {
+    for (const tbl of ['movies', 'series', 'animes']) {
+      const row = db.prepare(`SELECT * FROM ${tbl} WHERE id = ?`).get(id);
+      if (row) {
+        let streamUrl = '';
+        try {
+          const players = JSON.parse(row.players || '[]');
+          if (players.length > 0) {
+            const linkPlayer = players.find(p => p.data_type === 'link' && p.url);
+            if (linkPlayer) streamUrl = linkPlayer.url;
+          }
+        } catch {}
+        if (!streamUrl) streamUrl = row.source_url || '';
+        return res.json({ ...row, type: tbl === 'movies' ? 'movie' : tbl === 'series' ? 'series' : 'anime', stream_url: streamUrl });
+      }
+    }
+    // Check episodes
+    const ep = db.prepare("SELECT *, 'episode' as type FROM episodes WHERE id = ?").get(id);
+    if (ep) {
+      const streamUrl = ep.player_dublado || ep.player_legendado || ep.source_url || '';
+      return res.json({ ...ep, stream_url: streamUrl, title: ep.label || 'Episode ' + ep.episode_number });
+    }
+    const sep = db.prepare("SELECT *, 'episode' as type FROM series_episodes WHERE id = ?").get(id);
+    if (sep) {
+      let streamUrl = '';
+      try {
+        const players = JSON.parse(sep.players || '[]');
+        if (players.length > 0) {
+          const linkPlayer = players.find(p => p.data_type === 'link' && p.url);
+          if (linkPlayer) streamUrl = linkPlayer.url;
+        }
+      } catch {}
+      if (!streamUrl) streamUrl = sep.source_url || '';
+      return res.json({ ...sep, stream_url: streamUrl, title: sep.label || 'S' + sep.season + 'E' + sep.episode_number });
+    }
+  }
   res.status(404).json({ error: 'Not found' });
 });
 
@@ -622,5 +662,7 @@ app.listen(PORT, async () => {
   seedIfEmpty();
   // Import all 386K IPTV channels from M3U file
   importM3UIfEmpty();
+  // Import real scraped data (movies, series, animes, episodes)
+  importScrapedIfEmpty();
   if (!process.env.VERCEL) autoSyncTMDB().catch(e => console.log('TMDB sync error:', e.message));
 });
