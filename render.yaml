@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: lumora
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: node backend/src/server.js
+    envVars:
+      - key: TMDB_API_KEY
+        value: 2e33db9bbe550ebea6faaf24c6b3ed2f
