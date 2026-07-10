@@ -10,3 +10,5 @@ frontend/dist/
 *.log
 src_backup_*
 *_backup*
+__pycache__/
+.vercel/
