@@ -1,0 +1,12 @@
+backend/
+node_modules/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.log
+src_backup_*
+*_backup*
+__pycache__/
+.vercel/
+frontend/dist/

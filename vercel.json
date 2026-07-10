@@ -4,6 +4,6 @@
   "framework": "vite",
   "installCommand": "npm install --prefix frontend",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
+    { "source": "/api/:path*", "destination": "/api" }
   ]
 }
