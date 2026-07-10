@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function loadEnv() {
+  if (process.env.VERCEL) return {};
   try {
     const envFile = readFileSync(path.join(__dirname, '..', '.env'), 'utf8');
     const env = {};

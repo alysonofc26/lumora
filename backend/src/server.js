@@ -538,5 +538,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log('Lumora API on http://localhost:' + PORT);
   seedIfEmpty();
-  autoSyncTMDB();
+  if (!process.env.VERCEL) autoSyncTMDB();
 });
