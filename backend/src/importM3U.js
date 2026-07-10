@@ -44,6 +44,8 @@ function parseM3UAttribute(line, attr) {
 
 export function importM3UIfEmpty() {
   try {
+    ensureTables();
+
     const count = db.prepare('SELECT COUNT(*) as c FROM iptv_channels').get().c;
     if (count > 0) {
       console.log(`IPTV: ${count} channels already loaded.`);
@@ -58,8 +60,6 @@ export function importM3UIfEmpty() {
 
     const fileSize = statSync(m3uPath).size;
     console.log(`IPTV: Importing from ${(fileSize / 1024 / 1024).toFixed(1)}MB M3U file...`);
-
-    ensureTables();
 
     const content = readFileSync(m3uPath, 'utf-8');
     const lines = content.split('\n');
