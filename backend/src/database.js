@@ -54,6 +54,16 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
   CREATE INDEX IF NOT EXISTS idx_items_featured ON items(featured);
   CREATE INDEX IF NOT EXISTS idx_items_title ON items(title);
+
+  CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_type TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    title TEXT DEFAULT '',
+    thumbnail TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(item_type, item_id)
+  );
 `);
 
 try { db.exec("ALTER TABLE items ADD COLUMN tmdb_id INTEGER"); } catch {}

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import db from './database.js';
 import { v4 as uuidv4 } from 'uuid';
 import { searchMovie, searchTV, getMovieDetails, getTVDetails, enrichItem, getImageUrl } from './tmdb.js';
+import { importM3UIfEmpty } from './importM3U.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -245,13 +246,15 @@ app.delete('/api/items/:id', (req, res) => {
 });
 
 app.get('/api/stats', (req, res) => {
+  const iptvCount = hasIPTVData() ? db.prepare('SELECT COUNT(*) as c FROM iptv_channels WHERE active=1').get().c : 0;
   res.json({
     totalItems: db.prepare('SELECT COUNT(*) as c FROM items').get().c,
-    totalChannels: db.prepare("SELECT COUNT(*) as c FROM items WHERE type='channel'").get().c,
+    totalChannels: iptvCount || db.prepare("SELECT COUNT(*) as c FROM items WHERE type='channel'").get().c,
     totalMovies: db.prepare("SELECT COUNT(*) as c FROM items WHERE type='movie'").get().c,
     totalSeries: db.prepare("SELECT COUNT(*) as c FROM items WHERE type='series'").get().c,
     totalAnimes: db.prepare("SELECT COUNT(*) as c FROM items WHERE type='anime'").get().c,
     featured: db.prepare('SELECT COUNT(*) as c FROM items WHERE featured=1').get().c,
+    totalIPTV: iptvCount,
   });
 });
 
@@ -379,10 +382,15 @@ app.get('/api/series/:id', (req, res) => {
 
 // === IPTV CHANNELS ENDPOINTS ===
 
-const hasIPTVTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='iptv_channels'").get();
+function hasIPTVData() {
+  const tbl = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='iptv_channels'").get();
+  if (!tbl) return false;
+  const cnt = db.prepare('SELECT COUNT(*) as c FROM iptv_channels').get().c;
+  return cnt > 0;
+}
 
 app.get('/api/iptv/groups', (req, res) => {
-  if (!hasIPTVTable) {
+  if (!hasIPTVData()) {
     const channels = db.prepare("SELECT * FROM items WHERE type='channel'").all();
     const tags = {};
     channels.forEach(c => { const t = c.tags || 'Geral'; tags[t] = (tags[t] || 0) + 1; });
@@ -393,7 +401,7 @@ app.get('/api/iptv/groups', (req, res) => {
 });
 
 app.get('/api/iptv/channels', (req, res) => {
-  if (!hasIPTVTable) {
+  if (!hasIPTVData()) {
     const { search, limit = 100, page = 1 } = req.query;
     let channels = db.prepare("SELECT *, title as name, thumbnail as logo, tags as group_name FROM items WHERE type='channel'").all();
     if (search) {
@@ -418,7 +426,7 @@ app.get('/api/iptv/channels', (req, res) => {
 });
 
 app.get('/api/iptv/channels/:id', (req, res) => {
-  if (!hasIPTVTable) {
+  if (!hasIPTVData()) {
     const ch = db.prepare("SELECT *, title as name, thumbnail as logo FROM items WHERE id = ? AND type='channel'").get(req.params.id);
     if (!ch) return res.status(404).json({ error: 'Not found' });
     return res.json(ch);
@@ -431,7 +439,7 @@ app.get('/api/iptv/channels/:id', (req, res) => {
 // === IPTV CATEGORIES ENDPOINTS ===
 
 app.get('/api/iptv/categories', (req, res) => {
-  if (!hasIPTVTable) {
+  if (!hasIPTVData()) {
     return res.json([]);
   }
   const categories = db.prepare(`
@@ -598,8 +606,21 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
-app.listen(PORT, () => {
+// Middleware to refresh hasIPTVTable after import
+let iptvTableReady = false;
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/iptv') && !iptvTableReady) {
+    const tbl = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='iptv_channels'").get();
+    const cnt = tbl ? db.prepare('SELECT COUNT(*) as c FROM iptv_channels').get().c : 0;
+    if (cnt > 0) iptvTableReady = true;
+  }
+  next();
+});
+
+app.listen(PORT, async () => {
   console.log('Lumora API on http://localhost:' + PORT);
   seedIfEmpty();
+  // Import all 386K IPTV channels from M3U file
+  importM3UIfEmpty();
   if (!process.env.VERCEL) autoSyncTMDB().catch(e => console.log('TMDB sync error:', e.message));
 });
