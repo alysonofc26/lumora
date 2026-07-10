@@ -126,6 +126,7 @@ function seedIfEmpty() {
 
 // Auto TMDB sync on startup - ALL tables
 async function autoSyncTMDB() {
+  try {
   const tables = [
     { name: 'items', typeCol: 'type', titleCol: 'title' },
     { name: 'movies', typeCol: null, titleCol: 'title' },
@@ -136,7 +137,10 @@ async function autoSyncTMDB() {
   let totalSynced = 0;
   let totalItems = 0;
 
+  const existingTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r => r.name);
+
   for (const table of tables) {
+    if (!existingTables.includes(table.name)) continue;
     const items = db.prepare(`SELECT * FROM ${table.name}`).all();
     const needSync = items.filter(i => !i.tmdb_id);
     totalItems += needSync.length;
@@ -186,6 +190,7 @@ async function autoSyncTMDB() {
     console.log(`TMDB: ${table.name} done! ${synced}/${needSync.length}`);
   }
   console.log(`TMDB: ALL DONE! ${totalSynced}/${totalItems} synced`);
+  } catch (e) { console.log('TMDB sync error:', e.message); }
 }
 
 app.get('/api/categories', (req, res) => {
@@ -538,5 +543,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log('Lumora API on http://localhost:' + PORT);
   seedIfEmpty();
-  if (!process.env.VERCEL) autoSyncTMDB();
+  if (!process.env.VERCEL) autoSyncTMDB().catch(e => console.log('TMDB sync error:', e.message));
 });
