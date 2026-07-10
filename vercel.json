@@ -1,11 +1,5 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://lumora-backend.onrender.com/api/:path*"
-    }
-  ]
+  "framework": "vite"
 }
